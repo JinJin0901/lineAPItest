@@ -12,7 +12,69 @@ const config = {
   channelSecret: process.env.CHANNEL_SECRET,
 };
 
-const imgbbKey = process.env.IMGBB_API_KEY;
+const flexMessage = {
+    "type": "bubble",
+    "body": {
+      "type": "box",
+      "layout": "vertical",
+      "contents": [
+        {
+          "type": "image",
+          "url": "https://developers-resource.landpress.line.me/fx/clip/clip3.jpg",
+          "size": "full",
+          "aspectMode": "cover",
+          "aspectRatio": "1:1",
+          "gravity": "center"
+        },
+        {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [],
+          "position": "absolute",
+          "width": "100%",
+          "height": "40%",
+          "offsetBottom": "0px",
+          "offsetStart": "0px",
+          "offsetEnd": "0px",
+          "backgroundColor": "#00000099"
+        },
+        {
+          "type": "box",
+          "layout": "horizontal",
+          "contents": [
+            {
+              "type": "box",
+              "layout": "vertical",
+              "contents": [
+                {
+                  "type": "box",
+                  "layout": "horizontal",
+                  "contents": [
+                    {
+                      "type": "text",
+                      "text": "請上傳圖片",
+                      "size": "xl",
+                      "color": "#ffffff",
+                      "weight": "bold"
+                    }
+                  ]
+                }
+              ],
+              "spacing": "xs"
+            }
+          ],
+          "position": "absolute",
+          "offsetBottom": "0px",
+          "offsetStart": "0px",
+          "offsetEnd": "0px",
+          "paddingAll": "20px"
+        }
+      ],
+      "paddingAll": "0px"
+    }
+};
+
+const chatgptKey = process.env.OPENAI_API_KEY;
 
 const client = new line.Client(config);
 const app = express();
@@ -33,15 +95,37 @@ app.get('/', (req, res) => {
 });
 
 // 處理事件
-function handleEvent(event) {
+async function handleEvent(event) {
   if (
     event.replyToken === '00000000000000000000000000000000' ||
     event.replyToken === 'ffffffffffffffffffffffffffffffff'
   ) {
     return Promise.resolve(null);
   }
+  if (event.type === 'message' && event.message.type === 'text') {
+      const userMessage = event.message.text;
 
-  if (event.type === 'message' && event.message.type === 'image') {
+      // 呼叫 OpenAI API
+      const gptResponse = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: userMessage }
+        ]
+      }, {
+        headers: {
+          'Authorization': `Bearer ${chatgptKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const replyText = gptResponse.data.choices[0].message.content;
+
+      await client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: replyText
+      });
+      return true;
+    }
+/*  if (event.type === 'message' && event.message.type === 'image') {
     if (event.message.contentProvider.type === 'line') {
       return client.getMessageContent(event.message.id).then((stream) => {
         const chunks = [];
@@ -79,6 +163,13 @@ function handleEvent(event) {
       });
     }
   }
+  else{
+    client.replyMessage(event.replyToken, {
+      type: "flex",
+      altText: "請上傳圖片",
+      contents: flexMessage
+    });
+  }*/
 
   return Promise.resolve(null);
 }
