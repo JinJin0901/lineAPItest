@@ -63,51 +63,6 @@ async function handleEvent(event) {
       });
       return true;
     }
-/*  if (event.type === 'message' && event.message.type === 'image') {
-    if (event.message.contentProvider.type === 'line') {
-      return client.getMessageContent(event.message.id).then((stream) => {
-        const chunks = [];
-        stream.on('data', (chunk) => chunks.push(chunk));
-        stream.on('end', async () => {
-          const base64 = Buffer.concat(chunks).toString('base64');
-          console.log('圖片 base64 長度:', base64.length);
-
-          try {
-            const uploadUrl = `https://api.imgbb.com/1/upload?key=${imgbbKey}`;
-            const body = qs.stringify({
-              image: base64,
-            });
-
-            const response = await axios.post(uploadUrl, body, {
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-              },
-            });
-
-            const link = response.data.data.url;
-            console.log('✅ 上傳成功：', link);
-
-            const replyMsg = { type: 'text', text: link };
-            return client.replyMessage(event.replyToken, replyMsg);
-          } catch (err) {
-            console.error('❌ 上傳失敗:', err.response?.data || err.message);
-            const failMsg = {
-              type: 'text',
-              text: 'Send to imgbb Fail.',
-            };
-            return client.replyMessage(event.replyToken, failMsg);
-          }
-        });
-      });
-    }
-  }
-  else{
-    client.replyMessage(event.replyToken, {
-      type: "flex",
-      altText: "請上傳圖片",
-      contents: flexMessage
-    });
-  }*/
 
   return Promise.resolve(null);
 }
